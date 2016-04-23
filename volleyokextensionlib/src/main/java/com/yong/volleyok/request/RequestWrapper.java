@@ -1,7 +1,6 @@
 package com.yong.volleyok.request;
 
 import com.android.volley.AuthFailureError;
-import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
 import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
@@ -19,26 +18,25 @@ import java.util.Map;
  * <b>Description:</b> 原始请求的包装 <br>
  * 封装之后，子类只需要实现{@link #parseNetworkResponse(NetworkResponse)}即可，
  * 所有的扩展请求必须继承这个类{@link com.yong.volleyok.request.RequestWrapper}，
- * 不能去继承{@link com.android.volley.Request}
+ * 不需要去继承{@link com.android.volley.Request}
  */
 public abstract class RequestWrapper<T> extends com.android.volley.Request<T> {
 
     /**
      * 请求
      */
-    private HttpRequest mHttpRequest;
+    protected HttpRequest mHttpRequest;
 
     /**
      * 结果
      */
-    private HttpListener<T> mHttpListener;
+    protected HttpListener<T> mHttpListener;
 
     public RequestWrapper(HttpRequest httpRequest, HttpListener<T> listener) {
         // 这里不需要错误的监听，下面已经做了处理
         super(httpRequest.getMethod(), httpRequest.getUrl(), null);
         this.mHttpRequest = httpRequest;
         this.mHttpListener = listener;
-        setRetryPolicy(new DefaultRetryPolicy(10000, 2, 1.0F));
     }
 
     /**

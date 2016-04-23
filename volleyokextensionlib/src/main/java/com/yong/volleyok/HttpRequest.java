@@ -66,7 +66,7 @@ public class HttpRequest {
         Map<String, String> params = new HashMap<>();
 
         // 超时以及重连次数
-        RetryPolicy retryPolicy;
+        RetryPolicy retryPolicy = new DefaultRetryPolicy(10000, 2, 1.0F);
 
         public Builder(String url) {
             this.url = url;
