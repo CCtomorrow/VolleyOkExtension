@@ -8,11 +8,9 @@ import com.android.volley.toolbox.Volley;
 import com.google.gson.reflect.TypeToken;
 import com.yong.volleyok.okhttp.OkHttp3Stack;
 import com.yong.volleyok.request.ByteRequest;
-import com.yong.volleyok.request.GZipRequest;
 import com.yong.volleyok.request.GsonRequest;
 import com.yong.volleyok.request.JsonArrayRequest;
 import com.yong.volleyok.request.JsonObjectRequest;
-import com.yong.volleyok.request.StringRequest;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -77,8 +75,9 @@ public class HttpClient implements IHttpClient {
         mRequestQueue.cancelAll(tag);
     }
 
-    public Request ByteRequest(HttpRequest httpRequest, HttpListener<byte[]> listener) {
-        return byteRequest(httpRequest, listener, null);
+    @Override
+    public Request request(HttpRequest httpRequest, HttpListener<String> listener, Object tag) {
+        return null;
     }
 
     @Override
@@ -88,71 +87,32 @@ public class HttpClient implements IHttpClient {
         return request;
     }
 
-    public Request stringRequest(HttpRequest httpRequest, HttpListener<String> listener) {
-        return stringRequest(httpRequest, listener, null);
-    }
-
     @Override
-    public Request stringRequest(HttpRequest httpRequest, HttpListener<String> listener, Object tag) {
-        StringRequest request = new StringRequest(httpRequest, listener);
+    public Request jsonObjectRequest(HttpRequest httpRequest, HttpListener<JSONObject> listener, Object tag) {
+        JsonObjectRequest request = new JsonObjectRequest(httpRequest, listener);
         addRequest(request, tag);
         return request;
     }
 
-    public Request gZipRequest(HttpRequest httpRequest, HttpListener<String> listener) {
-        return gZipRequest(httpRequest, listener, null);
-    }
-
     @Override
-    public Request gZipRequest(HttpRequest httpRequest, HttpListener<String> listener, Object tag) {
-        GZipRequest request = new GZipRequest(httpRequest, listener);
-        addRequest(request, tag);
-        return request;
-    }
-
-    public Request jsonObjectRequest(HttpRequest httpRequest, HttpListener<JSONObject> listener) {
-        return jsonObjectRequest(null, httpRequest, listener);
-    }
-
-    public Request jsonObjectRequest(String requestBody, HttpRequest httpRequest, HttpListener<JSONObject> listener) {
-        return jsonObjectRequest(requestBody, httpRequest, listener, null);
-    }
-
-    @Override
-    public Request jsonObjectRequest(String requestBody, HttpRequest httpRequest, HttpListener<JSONObject> listener, Object tag) {
-        JsonObjectRequest request = new JsonObjectRequest(requestBody, httpRequest, listener);
-        addRequest(request, tag);
-        return request;
-    }
-
-    public Request jsonArrayRequest(HttpRequest httpRequest, HttpListener<JSONArray> listener) {
-        return jsonArrayRequest(httpRequest, listener, null);
-    }
-
     public Request jsonArrayRequest(HttpRequest httpRequest, HttpListener<JSONArray> listener, Object tag) {
-        return jsonArrayRequest(null, httpRequest, listener, tag);
-    }
-
-    @Override
-    public Request jsonArrayRequest(String requestBody, HttpRequest httpRequest, HttpListener<JSONArray> listener, Object tag) {
-        JsonArrayRequest request = new JsonArrayRequest(requestBody, httpRequest, listener);
+        JsonArrayRequest request = new JsonArrayRequest(httpRequest, listener);
         addRequest(request, tag);
         return request;
     }
 
-    public <T> Request gsonRequest(Class<T> tClass, HttpRequest httpRequest, HttpListener<T> listener) {
-        return gsonRequest(tClass, httpRequest, listener, null);
-    }
-
+    @Override
     public <T> Request gsonRequest(Class<T> tClass, HttpRequest httpRequest, HttpListener<T> listener, Object tag) {
-        return gsonRequest(tClass, null, httpRequest, listener, tag);
-    }
-
-    @Override
-    public <T> Request gsonRequest(Class<T> tClass, TypeToken<T> typeToken,
-                                   HttpRequest httpRequest, HttpListener<T> listener, Object tag) {
-        GsonRequest<T> request = new GsonRequest<T>(tClass, typeToken, httpRequest, listener);
+        GsonRequest<T> request = new GsonRequest<T>(tClass, httpRequest, listener);
         addRequest(request, tag);
         return request;
     }
+
+    @Override
+    public <T> Request gsonRequest(TypeToken<T> typeToken, HttpRequest httpRequest, HttpListener<T> listener, Object tag) {
+        GsonRequest<T> request = new GsonRequest<T>(typeToken, httpRequest, listener);
+        addRequest(request, tag);
+        return request;
+    }
+
 }

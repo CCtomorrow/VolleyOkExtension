@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
         HttpRequest request = new HttpRequest.Builder("http://www.mocky.io/v2/571b3c270f00001a0faddfcc")
                 .setMethod(Request.Method.GET)
                 .build();
-        mHttpClient.stringRequest(request, new HttpListener<String>() {
+        mHttpClient.request(request, new HttpListener<String>() {
             @Override
             public void onSuccess(String result) {
                 Log.e("TAG", result);
@@ -37,6 +37,12 @@ public class MainActivity extends AppCompatActivity {
             public void onError(VolleyError error) {
                 mResult.setText(error.getMessage());
             }
-        });
+        }, this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mHttpClient.cancelRequest(this);
     }
 }

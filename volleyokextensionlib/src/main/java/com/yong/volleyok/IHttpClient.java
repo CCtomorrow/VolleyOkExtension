@@ -15,6 +15,16 @@ import org.json.JSONObject;
 public interface IHttpClient {
 
     /**
+     * String请求
+     *
+     * @param httpRequest
+     * @param listener
+     * @param tag
+     * @return
+     */
+    Request request(HttpRequest httpRequest, final HttpListener<String> listener, Object tag);
+
+    /**
      * byte请求
      *
      * @param httpRequest
@@ -25,57 +35,53 @@ public interface IHttpClient {
     Request byteRequest(HttpRequest httpRequest, HttpListener<byte[]> listener, Object tag);
 
     /**
-     * String请求
-     *
-     * @param httpRequest
-     * @param listener
-     * @param tag
-     * @return
-     */
-    Request stringRequest(HttpRequest httpRequest, HttpListener<String> listener, Object tag);
-
-    /**
-     * gzip请求
-     *
-     * @param httpRequest
-     * @param listener
-     * @param tag
-     * @return
-     */
-    Request gZipRequest(HttpRequest httpRequest, HttpListener<String> listener, Object tag);
-
-    /**
      * JsonObject请求
      *
-     * @param requestBody
      * @param httpRequest
      * @param listener
      * @param tag
      * @return
      */
-    Request jsonObjectRequest(String requestBody, HttpRequest httpRequest, HttpListener<JSONObject> listener, Object tag);
+    Request jsonObjectRequest(HttpRequest httpRequest, HttpListener<JSONObject> listener, Object tag);
 
     /**
      * JsonArray请求
      *
-     * @param requestBody
      * @param httpRequest
      * @param listener
      * @param tag
      * @return
      */
-    Request jsonArrayRequest(String requestBody, HttpRequest httpRequest, HttpListener<JSONArray> listener, Object tag);
+    Request jsonArrayRequest(HttpRequest httpRequest, HttpListener<JSONArray> listener, Object tag);
 
     /**
      * Gson请求，可以映射Model
      *
-     * @param tClass
-     * @param typeToken
+     * @param tClass      映射的Model
      * @param httpRequest
      * @param listener
      * @param tag
      * @param <T>
      * @return
      */
-    <T> Request gsonRequest(Class<T> tClass, TypeToken<T> typeToken, HttpRequest httpRequest, HttpListener<T> listener, Object tag);
+    <T> Request gsonRequest(Class<T> tClass, HttpRequest httpRequest, HttpListener<T> listener, Object tag);
+
+    /**
+     * Gson请求，可以映射Model
+     *
+     * @param typeToken   例如List<Model>
+     * @param httpRequest
+     * @param listener
+     * @param tag
+     * @param <T>
+     * @return
+     */
+    <T> Request gsonRequest(TypeToken<T> typeToken, HttpRequest httpRequest, HttpListener<T> listener, Object tag);
+
+    /**
+     * 取消请求
+     *
+     * @param tag
+     */
+    void cancelRequest(Object tag);
 }

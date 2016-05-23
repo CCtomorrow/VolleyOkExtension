@@ -1,5 +1,7 @@
 package com.yong.volleyok.request;
 
+import android.text.TextUtils;
+
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
 import com.android.volley.RetryPolicy;
@@ -7,9 +9,12 @@ import com.android.volley.VolleyError;
 import com.yong.volleyok.HttpListener;
 import com.yong.volleyok.HttpRequest;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 /**
  * <b>Project:</b> com.yong.volleyok <br>
@@ -21,6 +26,8 @@ import java.util.Map;
  * 不需要去继承{@link com.android.volley.Request}
  */
 public abstract class RequestWrapper<T> extends com.android.volley.Request<T> {
+
+    protected static final String PARSEERROR = "ParseError";
 
     /**
      * 请求
@@ -37,28 +44,28 @@ public abstract class RequestWrapper<T> extends com.android.volley.Request<T> {
         super(httpRequest.getMethod(), httpRequest.getUrl(), null);
         this.mHttpRequest = httpRequest;
         this.mHttpListener = listener;
+        setRetryPolicy(getRetryPolicy());
     }
 
     /**
      * 得到url，这里get方法作处理，把参数都拼接上去
      *
-     * @return
+     * @return 请求地址，如果是get请求返回完整地址
      */
     @Override
     public String getUrl() {
         // 当get的时候做处理，把参数都连接起来
         try {
-            if (getMethod() == Method.GET &&
-                    (getParams() != null && getParams().size() != 0)) {
-                String encodedParams = getEncodedUrlParams();
-                String extra = "";
-                if (encodedParams != null && encodedParams.length() > 0) {
+            if (getMethod() == Method.GET && (getParams() != null && getParams().size() > 0)) {
+                String params = getUrlParams();
+                StringBuilder extra = new StringBuilder();
+                if (!TextUtils.isEmpty(params)) {
                     if (!mHttpRequest.getUrl().endsWith("?")) {
-                        extra += "?";
+                        extra.append("?");
                     }
-                    extra += encodedParams;
+                    extra.append(params);
                 }
-                return mHttpRequest.getUrl() + extra;
+                return mHttpRequest.getUrl() + extra.toString();
             }
         } catch (AuthFailureError e) {
         }
@@ -72,24 +79,22 @@ public abstract class RequestWrapper<T> extends com.android.volley.Request<T> {
      * @return
      * @throws AuthFailureError
      */
-    public String getEncodedUrlParams() throws AuthFailureError {
-        StringBuilder encodedParams = new StringBuilder();
-        String paramsEncoding = getParamsEncoding();
+    public String getUrlParams() throws AuthFailureError {
+        StringBuilder resultParams = new StringBuilder();
         Map<String, String> params = getParams();
-        try {
-            for (Map.Entry<String, String> entry : params.entrySet()) {
-                if (null == entry.getValue()) {
-                    continue;
-                }
-                encodedParams.append(URLEncoder.encode(entry.getKey(), paramsEncoding));
-                encodedParams.append('=');
-                encodedParams.append(URLEncoder.encode(entry.getValue(), paramsEncoding));
-                encodedParams.append('&');
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (null == entry.getValue()) {
+                continue;
             }
-            return encodedParams.toString();
-        } catch (UnsupportedEncodingException uee) {
-            throw new RuntimeException("Encoding not supported: " + paramsEncoding, uee);
+            resultParams.append(entry.getKey());
+            resultParams.append('=');
+            resultParams.append(entry.getValue());
+            resultParams.append('&');
         }
+        if (resultParams.length() <= 0)
+            return resultParams.toString();
+        // 去掉最后的&
+        return resultParams.substring(0, resultParams.length() - 1);
     }
 
     /**
@@ -142,6 +147,36 @@ public abstract class RequestWrapper<T> extends com.android.volley.Request<T> {
     @Override
     public RetryPolicy getRetryPolicy() {
         return mHttpRequest.getRetryPolicy();
+    }
+
+    /**
+     * 拿到请求的返回的字符串
+     *
+     * @return
+     */
+    public String getResponseString(NetworkResponse response) {
+        StringBuilder output = new StringBuilder();
+        String contentEncoding = response.headers.get("Content-Encoding");
+        if (!TextUtils.isEmpty(contentEncoding) && contentEncoding.contains("gzip")) {
+            // Gzip数据
+            try {
+                GZIPInputStream gStream = new GZIPInputStream(new ByteArrayInputStream(response.data));
+                InputStreamReader reader = new InputStreamReader(gStream);
+                BufferedReader in = new BufferedReader(reader);
+                String read;
+                while ((read = in.readLine()) != null) {
+                    output.append(read);
+                }
+                in.close();
+                reader.close();
+                gStream.close();
+            } catch (IOException e) {
+                return PARSEERROR;
+            }
+        } else {
+            output.append(new String(response.data));
+        }
+        return output.toString();
     }
 
     /**

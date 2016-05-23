@@ -1,12 +1,11 @@
 package com.yong.volleyok.request;
 
 import com.android.volley.NetworkResponse;
+import com.android.volley.ParseError;
 import com.android.volley.Response;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.yong.volleyok.HttpListener;
 import com.yong.volleyok.HttpRequest;
-
-import java.io.UnsupportedEncodingException;
 
 /**
  * <b>Project:</b> com.yong.volleyok.request <br>
@@ -22,13 +21,10 @@ public class StringRequest extends RequestWrapper<String> {
 
     @Override
     protected Response<String> parseNetworkResponse(NetworkResponse response) {
-        String parsed;
-        try {
-            parsed = new String(response.data, HttpHeaderParser.parseCharset(response.headers,
-                    getParamsEncoding()));
-        } catch (UnsupportedEncodingException e) {
-            parsed = new String(response.data);
+        String result = getResponseString(response);
+        if (result.equals(PARSEERROR)) {
+            return Response.error(new ParseError());
         }
-        return Response.success(parsed, HttpHeaderParser.parseCacheHeaders(response));
+        return Response.success(result, HttpHeaderParser.parseCacheHeaders(response));
     }
 }
